@@ -2854,8 +2854,8 @@ long
 video_usercopy(struct file *file, unsigned int cmd, unsigned long arg,
 	       v4l2_kioctl func)
 {
-	char	sbuf[SZ_4K] __aligned(8);
 	char    mbuf_onstack[SZ_512] __aligned(8);
+	char	sbuf[128];
 	void    *mbuf = NULL, *array_buf = NULL;
 	void	*parg = (void *)arg;
 	long	err  = -EINVAL;
@@ -2914,20 +2914,10 @@ video_usercopy(struct file *file, unsigned int cmd, unsigned long arg,
 	has_array_args = err;
 
 	if (has_array_args) {
-		/*
-		 * When adding new types of array args, make sure that the
-		 * parent argument to ioctl (which contains the pointer to the
-		 * array) fits into sbuf (so that mbuf will still remain
-		 * unused up to here).
-		 */
-		if (array_size <= ARRAY_SIZE(mbuf_onstack)) {
-			array_buf = mbuf_onstack;
-		} else {
-			array_buf = kmalloc(array_size, GFP_KERNEL);
-			err = -ENOMEM;
-			if (NULL == array_buf)
-				goto out_array_args;
-		}
+		array_buf = kvmalloc(array_size, GFP_KERNEL);
+		err = -ENOMEM;
+		if (array_buf == NULL)
+			goto out_array_args;
 		err = -EFAULT;
 		if (copy_from_user(array_buf, user_ptr, array_size))
 			goto out_array_args;
