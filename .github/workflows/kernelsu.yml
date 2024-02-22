@@ -40,9 +40,9 @@ jobs:
 
     strategy:
       matrix:
-        variant: [oneui, aosp]
-        enforcing: [e, p]
-        android: [11,12]
+        variant: [oneui]
+        enforcing: [e]
+        android: [11]
 
       fail-fast: false
 
